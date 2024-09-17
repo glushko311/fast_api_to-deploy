@@ -4,7 +4,7 @@ echo "deleting old app"
 sudo rm -rf /home/ubuntu/fast_api_to-deploy
 
 echo "creating app folder"
-sudo mkdir -p /var/www/fast_api_to-deploy
+sudo mkdir -p /home/ubuntu/fast_api_to-deploy
 
 echo "moving files to app folder"
 sudo mv  * /home/ubuntu/fast_api_to-deploy
@@ -21,7 +21,8 @@ sudo apt-get install -y python3 python3-pip
 cd /home/ubuntu/fast_api_to-deploy
 sudo apt install -y python3.12-venv
 sudo python3 -m venv venv
-source  venv/bin/activate
+source /home/ubuntu/fast_api_to-deploy/venv/bin/activate
+
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
