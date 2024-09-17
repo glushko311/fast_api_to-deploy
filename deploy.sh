@@ -41,7 +41,7 @@ if ! command -v nginx > /dev/null; then
     sudo apt-get install -y nginx
 fi
 
-# Configure Nginx to act as a reverse proxy if not already configured
+echo "Configure Nginx to act as a reverse proxy if not already configured"
 if [ ! -f /etc/nginx/sites-available/fastapi_nginx.conf ]; then
     sudo rm -f /etc/nginx/sites-enabled/default
     sudo bash -c 'cat > /etc/nginx/sites-available/fastapi_nginx.conf <<EOF
@@ -61,14 +61,41 @@ else
     echo "Nginx reverse proxy configuration already exists."
 fi
 
+
+
+echo "Configure Uvicorn service if not already configured"
+if [ ! -f /etc/systemd/system/uvicorn.service ]; then
+    sudo bash -c 'cat > /etc/systemd/system/uvicorn.service <<EOF
+[Unit]
+Description=Uvicorn instance to serve my FastAPI app
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/fast_api_to-deploy
+ExecStart=/home/ubuntu/fast_api_to-deploy/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+Environment="PATH=/home/ubuntu/fast_api_to-deploy/venv/bin"
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+#    sudo ln -s /etc/nginx/sites-available/fastapi_nginx.conf /etc/nginx/sites-enabled
+    echo "Reload daemons"
+    sudo systemctl daemon-reload
+else
+    echo "Uvicorn service configuration already exists."
+fi
+
+
 # Stop any existing Gunicorn process
 sudo pkill uvicorn
-sudo rm -rf myapp.sock
+#sudo rm -rf myapp.sock
 
-# # Start uvicorn with the FastApi application
-# # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
-# # gunicorn --workers 3 --bind 0.0.0.0:8000 server:app &
-echo "starting uvicorn"
-python3 -m uvicorn main:app
+echo "starting uvicorn service"
+sudo systemctl start uvicorn
+#python3 -m uvicorn main:app
 #sudo gunicorn --workers 3 --bind unix:myapp.sock  server:app --user www-data --group www-data --daemon
 echo "started uvicorn 🚀"
