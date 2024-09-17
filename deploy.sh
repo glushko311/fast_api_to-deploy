@@ -26,6 +26,8 @@ echo "Create venv and activate it"
 cd /home/ubuntu/fast_api_to-deploy
 sudo apt install -y python3.12-venv
 sudo python3 -m venv venv
+sudo chown -R ubuntu:ubuntu /home/ubuntu/fast_api_to-deploy/venv/
+sudo chmod -R 755 /home/ubuntu/fast_api_to-deploy/venv/
 source /home/ubuntu/fast_api_to-deploy/venv/bin/activate
 
 
