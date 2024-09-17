@@ -47,7 +47,7 @@ if [ ! -f /etc/nginx/sites-available/fastapi_nginx.conf ]; then
     sudo bash -c 'cat > /etc/nginx/sites-available/fastapi_nginx.conf <<EOF
 server {
     listen 80;
-    server_name 51.20.255.245;
+    server_name 16.171.224.85;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -62,7 +62,7 @@ else
 fi
 
 # Stop any existing Gunicorn process
-sudo pkill uvucorn
+sudo pkill uvicorn
 sudo rm -rf myapp.sock
 
 # # Start uvicorn with the FastApi application
