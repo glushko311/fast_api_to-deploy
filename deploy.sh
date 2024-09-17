@@ -30,11 +30,9 @@ sudo chown -R ubuntu:ubuntu /home/ubuntu/fast_api_to-deploy/venv/
 sudo chmod -R 755 /home/ubuntu/fast_api_to-deploy/venv/
 source /home/ubuntu/fast_api_to-deploy/venv/bin/activate
 
-
 echo "Install application dependencies from requirements.txt"
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
-
 
 echo "Update and install Nginx if not already installed"
 if ! command -v nginx > /dev/null; then
