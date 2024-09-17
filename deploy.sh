@@ -19,7 +19,7 @@ sudo apt-get install -y python3 python3-pip
 
 # Create venv and activate it
 cd /home/ubuntu/fast_api_to-deploy
-sudo apt install python3.12-venv
+sudo apt install -y python3.12-venv
 sudo python3 -m venv venv
 source  venv/bin/activate
 
