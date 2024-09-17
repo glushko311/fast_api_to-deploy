@@ -7,7 +7,8 @@ echo "creating app folder"
 sudo mkdir -p /home/ubuntu/fast_api_to-deploy
 
 echo "moving files to app folder"
-sudo mv  * /home/ubuntu/fast_api_to-deploy
+#sudo mv  * /home/ubuntu/fast_api_to-deploy
+rsync -av --exclude='fast_api_to-deploy' * /home/ubuntu/fast_api_to-deploy/
 
 echo "Navigate to the app directory"
 cd /home/ubuntu/fast_api_to-deploy
