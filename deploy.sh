@@ -1,12 +1,12 @@
 #!/bin/bash
 
-echo "deleting old app"
+echo "Deleting old app"
 sudo rm -rf /home/ubuntu/fast_api_to-deploy
 
-echo "creating app folder"
+echo "Creating app folder"
 sudo mkdir -p /home/ubuntu/fast_api_to-deploy
 
-echo "moving files to app folder"
+echo "Moving files to app folder"
 sudo mv /home/ubuntu/temporary/* /home/ubuntu/fast_api_to-deploy
 sudo rm -r /home/ubuntu/temporary
 
@@ -16,7 +16,7 @@ sudo mv env .env
 
 sudo apt-get update
 
-echo "installing python and pip"
+echo "Installing python and pip"
 sudo apt-get install -y python3 python3-pip
 
 echo "Add rights to app folder"
@@ -48,7 +48,7 @@ if [ ! -f /etc/nginx/sites-available/fastapi_nginx.conf ]; then
     sudo bash -c 'cat > /etc/nginx/sites-available/fastapi_nginx.conf <<EOF
 server {
     listen 80;
-    server_name 16.171.224.85;
+    server_name 13.49.46.150;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -75,7 +75,7 @@ After=network.target
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/fast_api_to-deploy
-ExecStart=/home/ubuntu/fast_api_to-deploy/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/home/ubuntu/fast_api_to-deploy/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 3
 Restart=always
 Environment="PATH=/home/ubuntu/fast_api_to-deploy/venv/bin"
 
@@ -83,20 +83,13 @@ Environment="PATH=/home/ubuntu/fast_api_to-deploy/venv/bin"
 WantedBy=multi-user.target
 EOF'
 
-#    sudo ln -s /etc/nginx/sites-available/fastapi_nginx.conf /etc/nginx/sites-enabled
     echo "Reload daemons"
     sudo systemctl daemon-reload
+    echo "Starting uvicorn service"
+    sudo systemctl start uvicorn
+    echo "Uvicorn started successfully 🚀"
 else
-    echo "Uvicorn service configuration already exists."
+    echo "Uvicorn service configuration already exists. Restart uvicorn service."
+    sudo systemctl restart uvicorn.service
+    echo "Uvicorn restarted successfully 🚀"
 fi
-
-
-# Stop any existing Gunicorn process
-sudo pkill uvicorn
-#sudo rm -rf myapp.sock
-
-echo "starting uvicorn service"
-sudo systemctl start uvicorn
-#python3 -m uvicorn main:app
-#sudo gunicorn --workers 3 --bind unix:myapp.sock  server:app --user www-data --group www-data --daemon
-echo "started uvicorn 🚀"
