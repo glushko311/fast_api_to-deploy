@@ -27,6 +27,7 @@ jobs:
         run: |
           echo "ENV=${ENV}" >> env
           echo "EC2_USERNAME=${EC2_USERNAME}" >> env
+          echo "EC2_HOST=${EC2_HOST}" >> env
 
       - name: Create temporary folder for files
         env:
