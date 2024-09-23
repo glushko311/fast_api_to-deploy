@@ -6,7 +6,7 @@ set -e # Прерывание выполнения скрипта при оши�
 PROJECT_NAME="fast_api_to-deploy"
 PROJECT_DIR="/home/ubuntu/$PROJECT_NAME"
 LOGFILE="/var/log/deploy.log"
-NGINX_CONF="/etc/nginx/sites-available/${PROJECT_NAME}_nginx.conf"
+NGINX_CONF="/etc/nginx/sites-available/${PROJECT_NAME}.conf"
 
 # Логирование
 exec > >(tee -a $LOGFILE) 2>&1
