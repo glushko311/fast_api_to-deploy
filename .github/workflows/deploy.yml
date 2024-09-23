@@ -20,12 +20,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Set up SSH key and whitelist EC2 IP address 🐻‍❄️
+      - name: Set up SSH key and add to known hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
   deploy:
     runs-on: ubuntu-latest
