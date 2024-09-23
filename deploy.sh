@@ -1,72 +1,90 @@
 #!/bin/bash
 
-echo "Deleting old app"
-sudo rm -rf /home/ubuntu/fast_api_to-deploy
+set -e # Прерывание выполнения скрипта при ошибке
 
+# Переменные
+PROJECT_NAME="fast_api_to-deploy"
+PROJECT_DIR="/home/ubuntu/$PROJECT_NAME"
+LOGFILE="/var/log/deploy.log"
+NGINX_CONF="/etc/nginx/sites-available/${PROJECT_NAME}_nginx.conf"
+
+# Логирование
+exec > >(tee -a $LOGFILE) 2>&1
+
+echo "Starting deployment at $(date)"
+
+# Удаление старого приложения с проверкой
+if [ -d "$PROJECT_DIR" ]; then
+    echo "Deleting old app"
+    sudo rm -rf $PROJECT_DIR
+fi
+
+# Создание папки для нового приложения
 echo "Creating app folder"
-sudo mkdir -p /home/ubuntu/fast_api_to-deploy
+sudo mkdir -p $PROJECT_DIR
 
+# Перемещение файлов в папку приложения
 echo "Moving files to app folder"
-sudo mv /home/ubuntu/temporary/* /home/ubuntu/fast_api_to-deploy
-sudo rm -r /home/ubuntu/temporary
+sudo mv /home/ubuntu/temporary/* $PROJECT_DIR && sudo rm -r /home/ubuntu/temporary
 
-echo "Navigate to the app directory"
-cd /home/ubuntu/fast_api_to-deploy
+# Перемещение env файла
+cd $PROJECT_DIR
 sudo mv env .env
 
+# Обновление системы
+echo "Updating package lists"
 sudo apt-get update
 
-echo "Installing python and pip"
-sudo apt-get install -y python3 python3-pip
+# Установка Python и зависимостей
+echo "Installing Python and pip"
+if ! dpkg -s python3 &>/dev/null; then
+    sudo apt-get install -y python3 python3-pip
+fi
 
-echo "Add rights to app folder"
-sudo chown -R ubuntu:ubuntu /home/ubuntu/fast_api_to-deploy/
-sudo chmod -R 755 /home/ubuntu/fast_api_to-deploy/
+if ! dpkg -s python3.12-venv &>/dev/null; then
+    sudo apt install -y python3.12-venv
+fi
 
-echo "Create venv and activate it"
-cd /home/ubuntu/fast_api_to-deploy
-sudo apt install -y python3.12-venv
+# Создание и активация виртуального окружения
+echo "Creating and activating virtual environment"
 sudo python3 -m venv venv
-sudo chown -R ubuntu:ubuntu /home/ubuntu/fast_api_to-deploy/venv/
-sudo chmod -R 755 /home/ubuntu/fast_api_to-deploy/venv/
-source /home/ubuntu/fast_api_to-deploy/venv/bin/activate
+sudo chown -R ubuntu:ubuntu $PROJECT_DIR/venv/
+sudo chmod -R 755 $PROJECT_DIR/venv/
+source $PROJECT_DIR/venv/bin/activate
 
-echo "Install application dependencies from requirements.txt"
+# Установка зависимостей
+echo "Installing dependencies"
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 
-echo "Update and install Nginx if not already installed"
+# Проверка установки и конфигурации Nginx
+echo "Checking and configuring Nginx"
 if ! command -v nginx > /dev/null; then
-    echo "Installing Nginx"
-    sudo apt-get update
     sudo apt-get install -y nginx
 fi
 
-echo "Configure Nginx to act as a reverse proxy if not already configured"
-if [ ! -f /etc/nginx/sites-available/fastapi_nginx.conf ]; then
+if [ ! -f $NGINX_CONF ]; then
     sudo rm -f /etc/nginx/sites-enabled/default
-    sudo bash -c 'cat > /etc/nginx/sites-available/fastapi_nginx.conf <<EOF
+    sudo bash -c "cat > $NGINX_CONF <<EOF
 server {
     listen 80;
-    server_name 13.49.46.150;
+    server_name ${EC2_HOST};
 
     location / {
         proxy_pass http://127.0.0.1:8000;
     }
 }
-EOF'
-
-    sudo ln -s /etc/nginx/sites-available/fastapi_nginx.conf /etc/nginx/sites-enabled
+EOF"
+    sudo ln -s $NGINX_CONF /etc/nginx/sites-enabled
     sudo systemctl restart nginx
 else
     echo "Nginx reverse proxy configuration already exists."
 fi
 
-
-
-echo "Configure Uvicorn service if not already configured"
+# Проверка и настройка Uvicorn
+echo "Configuring Uvicorn service"
 if [ ! -f /etc/systemd/system/uvicorn.service ]; then
-    sudo bash -c 'cat > /etc/systemd/system/uvicorn.service <<EOF
+    sudo bash -c "cat > /etc/systemd/system/uvicorn.service <<EOF
 [Unit]
 Description=Uvicorn instance to serve my FastAPI app
 After=network.target
@@ -74,22 +92,29 @@ After=network.target
 [Service]
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/home/ubuntu/fast_api_to-deploy
-ExecStart=/home/ubuntu/fast_api_to-deploy/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 3
+WorkingDirectory=$PROJECT_DIR
+ExecStart=$PROJECT_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 3
 Restart=always
-Environment="PATH=/home/ubuntu/fast_api_to-deploy/venv/bin"
+Environment=\"PATH=$PROJECT_DIR/venv/bin\"
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF"
 
-    echo "Reload daemons"
+    echo "Reloading daemons and starting Uvicorn"
     sudo systemctl daemon-reload
-    echo "Starting uvicorn service"
     sudo systemctl start uvicorn
-    echo "Uvicorn started successfully 🚀"
 else
-    echo "Uvicorn service configuration already exists. Restart uvicorn service."
-    sudo systemctl restart uvicorn.service
-    echo "Uvicorn restarted successfully 🚀"
+    echo "Restarting Uvicorn service"
+    sudo systemctl restart uvicorn
 fi
+
+# Проверка статуса Uvicorn
+if systemctl is-active --quiet uvicorn; then
+    echo "Uvicorn started successfully"
+else
+    echo "Uvicorn failed to start" >&2
+    exit 1
+fi
+
+echo "Deployment completed successfully at $(date)"
