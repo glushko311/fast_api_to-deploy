@@ -8,6 +8,27 @@ PROJECT_DIR="/home/ubuntu/$PROJECT_NAME"
 LOGFILE="/var/log/deploy.log"
 NGINX_CONF="/etc/nginx/sites-available/${PROJECT_NAME}.conf"
 
+if [ -f "$LOGFILE" ]; then
+  sudo touch "$LOGFILE"
+  sudo chmod 664 "$LOGFILE"
+  echo "File $LOGFILE has been created successfully"
+else
+  echo "File $LOGFILE already exists"
+fi
+
+# Создаем файл (если он не существует)
+sudo touch "$LOGFILE"
+
+# Устанавливаем права доступа для всех пользователей
+#sudo chmod 664 "$LOGFILE"
+
+# Проверка успешности создания и установки прав
+if [ $? -eq 0 ]; then
+    echo "File $LOGFILE has been ."
+else
+    echo "Ошибка при создании файла $LOGFILE."
+fi
+
 # Логирование
 exec > >(tee -a $LOGFILE) 2>&1
 
