@@ -7,9 +7,6 @@ PROJECT_NAME="fast_api_to-deploy"
 PROJECT_DIR="/home/ubuntu/$PROJECT_NAME"
 LOGFILE="/var/log/deploy.log"
 NGINX_CONF="/etc/nginx/sites-available/${PROJECT_NAME}.conf"
-EC2_HOST=${EC2_HOST}
-
-echo "EC2_HOST = ${EC2_HOST}"
 
 # Логирование
 exec > >(tee -a $LOGFILE) 2>&1
