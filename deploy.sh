@@ -60,6 +60,16 @@ echo "Installing dependencies"
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 
+# Загрузка переменных из .env файла
+echo "Load .env configuration variables"
+if [ -f "$PROJECT_DIR/.env" ]; then
+  source "$PROJECT_DIR/.env"
+else
+  echo ".env file not found!"
+  exit 1
+fi
+echo "EC2 Host: $EC2_HOST"
+
 # Проверка установки и конфигурации Nginx
 echo "Checking and configuring Nginx"
 if ! command -v nginx > /dev/null; then
