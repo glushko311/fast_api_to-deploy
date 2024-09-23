@@ -16,19 +16,6 @@ else
   echo "File $LOGFILE already exists"
 fi
 
-# Создаем файл (если он не существует)
-sudo touch "$LOGFILE"
-
-# Устанавливаем права доступа для всех пользователей
-#sudo chmod 664 "$LOGFILE"
-
-# Проверка успешности создания и установки прав
-if [ $? -eq 0 ]; then
-    echo "File $LOGFILE has been ."
-else
-    echo "Ошибка при создании файла $LOGFILE."
-fi
-
 # Логирование
 exec > >(tee -a $LOGFILE) 2>&1
 
