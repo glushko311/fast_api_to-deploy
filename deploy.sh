@@ -74,7 +74,7 @@ if ! command -v nginx > /dev/null; then
 fi
 
 if [ ! -f $NGINX_CONF ]; then
-    sudo rm -f /etc/nginx/sites-enabled/default
+    sudo rm -f /etc/nginx/sites-available/default
     sudo bash -c "cat > $NGINX_CONF <<EOF
 server {
     listen 80;
